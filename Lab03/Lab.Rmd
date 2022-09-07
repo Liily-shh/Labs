@@ -64,3 +64,25 @@ cor(elev$wind.sp, elev$day, use="complete")
 cor(elev$wind.sp, elev$hour, use="complete")
 cor(elev$temp, elev$day, use="complete")
 ```
+
+### Step 7: Exploratory graphs
+
+Look at key variables 
+
+```{r}
+hist(met$elev, breaks=100)
+hist(met$temp)
+hist(met$wind.sp)
+```
+
+```{r}
+install.packages("leaflet")
+library(leaflet)
+elev <- met[elev==max(elev)]
+```
+```{r}
+leaflet(elev) %>%
+  addProviderTiles('OpenStreetMap') %>% 
+  addCircles(lat=~lat,lng=~lon, opacity=1, fillOpacity=1, radius=100)
+```
+
