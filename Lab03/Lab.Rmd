@@ -36,8 +36,12 @@ table (met$hour)
 summary(met$temp)
 summary(met$elev)
 summary(met$wind.sp)
+```
+```{r}
 met[met$elev==9999.0] <- NA
 summary(met$elev)
+```
+```{r}
 met <- met[temp>-40]
 met2 <- met[order(temp)]
 head(met2)
