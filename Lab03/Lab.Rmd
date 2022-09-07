@@ -18,7 +18,30 @@ download.file("https://raw.githubusercontent.com/USCbiostats/data-science-data/m
 met <- data.table::fread("met_all.gz")
 ```
 
-
+### 2. Check the dimensions, headers, footers. How many columns, rows are there?
+```{r}
+dim(met)
+head(met)
+tail(met)
+```
+### 3. Take a look at the variables.
+```{r}
+str(met)
+```
+#### 4. Take a closer look at the key variables.
+```{r}
+table (met$year)
+table (met$day)
+table (met$hour)
+summary(met$temp)
+summary(met$elev)
+summary(met$wind.sp)
+met[met$elev==9999.0] <- NA
+summary(met$elev)
+met <- met[temp>-40]
+met2 <- met[order(temp)]
+head(met2)
+```
 ## R Markdown
 
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
