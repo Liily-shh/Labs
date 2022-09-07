@@ -76,7 +76,7 @@ hist(met$wind.sp)
 ```
 
 ```{r}
-install.packages("leaflet")
+install.packages("leaflet") 
 library(leaflet)
 elev <- met[elev==max(elev)]
 ```
