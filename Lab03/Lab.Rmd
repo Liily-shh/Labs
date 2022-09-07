@@ -81,7 +81,7 @@ library(leaflet)
 elev <- met[elev==max(elev)]
 ```
 ```{r}
-leaflet(elev) %>%
+leaflet(elev) %>% 
   addProviderTiles('OpenStreetMap') %>% 
   addCircles(lat=~lat,lng=~lon, opacity=1, fillOpacity=1, radius=100)
 ```
