@@ -1,0 +1,70 @@
+---
+title: "Lab04"
+author: "Lily"
+date: "`r Sys.Date()`"
+output: github_document
+
+---
+
+```{r install-libraries}
+library(lubridate)
+library(tidyverse)
+library(data.table)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+if (!file.exists("met_all.gz"))
+  download.file(
+    url = "https://raw.githubusercontent.com/USCbiostats/data-science-data/master/02_met/met_all.gz",
+    destfile = "met_all.gz",
+    method   = "libcurl",
+    timeout  = 60
+    )
+met <- data.table::fread("met_all.gz")
+```
+
+```{r remove-low-temo}
+met <- met[temp> -17][elev == 9999.0, elev:=NA]
+```
+```{r}
+met <- met [ , ymd:= as.Date(paste(year, month, day, sep = "-"))]
+```
+
+
+```{r}
+met[, table(week(ymd))]
+met <- met[week(ymd) == 31]
+```
+
+
+```{r}
+met[, . (
+    temp      = mean(temp, na.rm=T),
+    rh        = mean(rh, na.rm=T),
+    wind.sp   = mean(wind.sp, na.rm=T),
+    vis.dist  = mean(vis.dist, na.rm=T),
+    dew.point = mean(dew.point, na.rm=T),
+    lat       = mean(lat, na.rm=T),
+    lon       = mean(lon, na.rm=T),
+    elev      = mean(elev, na.rm=T)
+)]
+```
+
+
+```{r check-avg}
+met_avg <- met[, . (
+    temp      = mean(temp, na.rm=T),
+    rh        = mean(rh, na.rm=T),
+    wind.sp   = mean(wind.sp, na.rm=T),
+    vis.dist  = mean(vis.dist, na.rm=T),
+    dew.point = mean(dew.point, na.rm=T),
+    lat       = mean(lat, na.rm=T),
+    lon       = mean(lon, na.rm=T),
+    elev      = mean(elev, na.rm=T)
+), by = "USAFID"]
+```
+
