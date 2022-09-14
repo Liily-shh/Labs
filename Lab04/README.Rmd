@@ -128,3 +128,37 @@ met_avg[!is.na(region) & !is.na(wind.sp)] %>%
 ``` 
 The Southwest tends to slightly go down while the rest slightly go up. 
 
+## 6.  Use stat_summary to examine mean dew point and wind speed by region with standard deviation error bars
+```{r}
+met_avg[!is.na(dew.point)] %>%
+  ggplot(mapping = aes(x = region, y = dew.point)) + 
+  stat_summary(fun.data=mean_sdl, geom = 'errorbar') 
+```
+I can show with means or with errors but not both. 
+
+## 7. Make a map showing the spatial trend in relative h in the US
+```{r}
+library(leaflet)
+rh.pal <- colorNumeric(c('darkgreen','goldenrod','brown'), domain=met_avg$rh)
+rh.pal
+```
+
+```{r}
+top10rh <- met_avg[order(-rh)][1:10]
+```
+```{r}
+rhmap <- leaflet(met_avg) %>% 
+  # The looks of the Map
+  addProviderTiles('CartoDB.Positron') %>% 
+  # Some circles
+  addCircles(
+    lat = ~lat, lng=~lon,
+  # HERE IS OUR PAL!
+    label = ~paste0(rh), color = ~ rh.pal(rh),
+    opacity = 1, fillOpacity = 1, radius = 500
+    ) %>%
+  # And a pretty legend
+  addLegend('bottomleft', pal=rh.pal, values=met_avg$rh,
+          title='Temperature, C', opacity=1)
+rhmap
+```
