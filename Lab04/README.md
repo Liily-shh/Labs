@@ -55,24 +55,38 @@ library(data.table)
     ##     hour, isoweek, mday, minute, month, quarter, second, wday, week,
     ##     yday, year
 
-``` r
-if (!file.exists("met_all.gz"))
-  download.file(
-    url = "https://raw.githubusercontent.com/USCbiostats/data-science-data/master/02_met/met_all.gz",
-    destfile = "met_all.gz",
-    method   = "libcurl",
-    timeout  = 60
-    )
-met <- data.table::fread("met_all.gz")
-```
+## Step 1. Read in the data
+
+First download and then read in with data.table:fread()
 
 ``` r
-met <- met[temp> -17][elev == 9999.0, elev:=NA]
+if (!file.exists("../lab03/met_all.gz")) {
+  download.file("https://raw.githubusercontent.com/USCbiostats/data-science-data/master/02_met/met_all.gz", 
+                "met_all.gz", method="libcurl", timeout = 60)  
+}
+met <- data.table::fread("../lab03/met_all.gz")
 ```
 
+## Step 2. Prep Data
+
+Remove temperatures less than -17C and change elev 9999 to missing value
+code.
+
 ``` r
-met <- met [ , ymd:= as.Date(paste(year, month, day, sep = "-"))]
+met <- met[temp > -17][elev == 9999.0, elev := NA]
 ```
+
+# check no 9999s in other important variables
+
+Generate a date variable using the functions as.Date() (hint: You will
+need the following to create a date paste(year, month, day, sep = “-”)).
+
+``` r
+met <- met[ ,  ymd := as.Date(paste(year, month, day, sep = "-"))]
+```
+
+Using the data.table::week function, keep the observations of the first
+week of the month.
 
 ``` r
 met[, table(week(ymd))]
@@ -83,34 +97,100 @@ met[, table(week(ymd))]
     ## 297259 521600 527922 523847 446576
 
 ``` r
-met <- met[week(ymd) == 31]
+met <- met[ week(ymd) == 31 ]
 ```
 
+Compute the mean by station of the variables temp, rh, wind.sp,
+vis.dist, dew.point, lat, lon, and elev.
+
 ``` r
-met[, . (
-    temp      = mean(temp, na.rm=T),
-    rh        = mean(rh, na.rm=T),
-    wind.sp   = mean(wind.sp, na.rm=T),
-    vis.dist  = mean(vis.dist, na.rm=T),
-    dew.point = mean(dew.point, na.rm=T),
-    lat       = mean(lat, na.rm=T),
-    lon       = mean(lon, na.rm=T),
-    elev      = mean(elev, na.rm=T)
+met[, .(
+  temp      = max(temp,na.rm=T),
+  rh        = max(rh,na.rm=T), 
+  wind.sp   = max(wind.sp,na.rm=T), 
+  vis.dist  = max(vis.dist,na.rm=T), 
+  dew.point = max(dew.point,na.rm=T), 
+  lat       = max(lat,na.rm=T), 
+  lon       = max(lon,na.rm=T), 
+  elev      = max(elev,na.rm=T)
 )]
 ```
 
-    ##        temp       rh  wind.sp vis.dist dew.point      lat      lon     elev
-    ## 1: 24.01861 71.48636 1.973041 14901.39  17.49984 37.91779 -92.2633 415.6731
+    ##    temp  rh wind.sp vis.dist dew.point    lat     lon elev
+    ## 1:   47 100    20.6   144841        29 48.941 -68.313 4113
+
+Great! No more 9999s in our dataset.
 
 ``` r
-met_avg <- met[, . (
-    temp      = mean(temp, na.rm=T),
-    rh        = mean(rh, na.rm=T),
-    wind.sp   = mean(wind.sp, na.rm=T),
-    vis.dist  = mean(vis.dist, na.rm=T),
-    dew.point = mean(dew.point, na.rm=T),
-    lat       = mean(lat, na.rm=T),
-    lon       = mean(lon, na.rm=T),
-    elev      = mean(elev, na.rm=T)
+met_avg <- met[, .(
+  temp      = mean(temp,na.rm=T),
+  rh        = mean(rh,na.rm=T), 
+  wind.sp   = mean(wind.sp,na.rm=T), 
+  vis.dist  = mean(vis.dist,na.rm=T), 
+  dew.point = mean(dew.point,na.rm=T), 
+  lat       = mean(lat,na.rm=T), 
+  lon       = mean(lon,na.rm=T), 
+  elev      = mean(elev,na.rm=T)
 ), by = "USAFID"]
 ```
+
+Create a region variable for NW, SW, NE, SE based on lon = -98.00 and
+lat = 39.71 degrees
+
+``` r
+met_avg <- met_avg[, region := fifelse(lon >= -98 & lat > 39.71, "NE", 
+                fifelse(lon < -98 & lat > 39.71, "NW", 
+                fifelse(lon < -98 & lat <= 39.71, "SW", "SE")))
+    ]
+table(met_avg$region)
+```
+
+    ## 
+    ##  NE  NW  SE  SW 
+    ## 484 146 649 296
+
+Create a categorical variable for elevation as in the lecture slides \`
+
+``` r
+met_avg[, elev_cat := fifelse(elev > 252, "high", "low")]
+```
+
+## 3. Make Violin plots
+
+``` r
+met_avg[!is.na(region)] %>% 
+  ggplot() + 
+  geom_violin(mapping = aes(y = dew.point, x = 1, color=region, fill = region)) + 
+  facet_wrap(~ region, nrow = 1)
+```
+
+![](README_files/figure-gfm/violin-dewpoint-1.png)<!-- --> The Highest
+dew point temperatures are reported in the SE.
+
+``` r
+met_avg[!is.na(region) & !is.na(wind.sp)] %>% 
+  ggplot() + 
+  geom_violin(mapping = aes(y = wind.sp, x = 1, color=region, fill = region)) + 
+  facet_wrap(~ region, nrow = 2)
+```
+
+![](README_files/figure-gfm/violin-wind.sp-1.png)<!-- --> The highest
+windspeed occured in the NE.
+
+## 4. Use geom_point with geom_smooth to examine the association between dew point temperature and wind speed by region
+
+Colour points by region Make sure to deal with NA category Fit a linear
+regression line by region Describe what you observe in the graph
+
+``` r
+met_avg[!is.na(region) & !is.na(wind.sp)] %>% 
+  ggplot(mapping = aes(x = wind.sp, y = dew.point, color=region)) + 
+  geom_point(mapping = aes(color = region)) + 
+  geom_smooth(method = lm, mapping = aes(linetype = region)) +
+  facet_wrap(~ region, nrow = 2)
+```
+
+    ## `geom_smooth()` using formula 'y ~ x'
+
+![](README_files/figure-gfm/scatterplot-dewpoint-wind.sp-1.png)<!-- -->
+The Southwest tends to slightly go down while the rest slightly go up.
