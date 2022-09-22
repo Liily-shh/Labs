@@ -92,6 +92,53 @@ station_averages[ which.min(temp_dist50)]
 
 It matches the result above.
 
-
-
-
+```{r}
+station_averages <- 
+     met[ , .(
+       temp      = mean(temp, na.rm=T),
+       wind.sp   = mean(wind.sp, na.rm=T),
+       atm.press = mean(atm.press,na.rm=T)
+     ), by = .(USAFID, STATE)]
+head(station_averages)
+```
+```{r}
+stmeds <- station_averages[ , .(
+          temp50     = median(temp, na.rm=T),
+          windsp50   = median(wind.sp,na.rm=T),
+          atmpress50 = median(atm.press,na.rm=T)
+),   by = STATE]
+stmeds
+```
+```{r}
+station_averages <- merge ( 
+        x = station_averages, 
+        y = stmeds, 
+        by.x = "STATE",
+    by.y = "STATE",
+    all.x = TRUE,
+    all.y = FALSE)
+```
+```{r}
+station_averages[ ,temp_dist_state50 := temp - temp50]
+station_averages[ ,windsp_dist_state50 := wind.sp - windsp50]
+station_averages
+```
+```{r}
+station_averages [, eucdist := temp_dist_state50^2 + 
+                    windsp_dist_state50^2]
+```
+```{r}
+repstation <- station_averages [, .(
+                    eucdist = min(eucdist, na.rm=T)), 
+                  by = STATE]
+```
+```{r}
+test <- merge (
+  x = station_averages,
+  y = repstation,
+  by.x = c("eucdist", "STATE"),
+  by.y = c("eucdist", "STATE"),
+  all.x = FALSE,
+  all.y = TRUE
+)
+```
