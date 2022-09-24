@@ -162,3 +162,4 @@ rhmap <- leaflet(met_avg) %>%
           title='Temperature, C', opacity=1)
 rhmap
 ```
+ 

@@ -1,0 +1,99 @@
+---
+  title: "Assignment 1"
+author: "Lily"
+date: "`r Sys.Date()`"
+output: github_document
+always_allow_html: true
+---
+  
+```{r install-libraries}
+library(lubridate)
+library(tidyverse)
+library(data.table)
+library(data.table)
+library(dtplyr)
+library(dplyr)
+library(leaflet)
+library(ggplot2)
+```
+
+# Step 1
+```{r Read in Data}
+D04 <- data.table::fread("ad_viz_plotval_data.csv")
+D19 <- data.table::fread("ad_viz_plotval_data2.csv")
+```
+### Check dimensions, headers, footers, variable names and variable types
+```{r Checks}
+dim(D04)
+head(D04)
+tail(D04)
+str(D04)
+dim(D19)
+head(D19)
+tail(D19)
+str(D19)
+```
+### Summary
+After checking all the requested aspects of the data, I observed no data issues. 2004 has 20 variables and 19,233 observation while 2019 also has 20 variables with 53,156 observations. 
+
+# Step 2
+```{r Merge Data}
+DM <- rbind(D04, D19)
+```
+### Column for Year
+```{r Rename}
+DM <- mutate(DM, year = factor(rep(c(2004, 2019), c(nrow(D04), nrow(D19))))) %>%
+  rename(lat = SITE_LATITUDE, lon = SITE_LONGITUDE)
+```
+
+# Step 3
+```{r Locations and Year}
+DM2 <- DM
+DM2 = DM2%>% select(lat, lon, year)
+```
+### Color Scheme 
+```{r Colors}
+DMC <- colorFactor("RdYlBu", domain=DM2$year)
+DMC
+```
+### Leaflet
+```{r Map}
+LDM <- leaflet(DM2)
+LDM
+```
+
+### Summary 
+I observed densely populated site zone in CA. 
+
+# Step 4
+```{r missing or implaus}
+summary(DM$DM)
+```
+### Summary 
+I did not observe any missing Data
+
+#5 
+```{r State}
+DM$yday <- yday(DM$Date)
+state <- DM2 %>%
+  group_by(yday,year) %>%
+  summarise(ADM=mean(DM))
+```
+### Summary State 
+We saw lower levels in 2019
+```{r county}
+DM$yday <- yday(DM$Date)
+county <- DM2 %>%
+  group_by(yday,year) %>%
+  summarise(ADM=mean(DM))
+```
+### Summary State 
+The levels decresed from 2004 to 2019
+```{r site}
+DM$yday <- yday(DM$Date)
+site <- DM2 %>%
+  group_by(yday,year) %>%
+  summarise(ADM=mean(DM))
+```
+### Summary State   
+We saw new sites appear   
