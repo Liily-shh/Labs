@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r install-libraries}
 library(tidyverse)
+library(tidyverse)
 library(dplyr)
 library(ggplot2)
 library(forcats)
@@ -41,4 +42,25 @@ specialties %>%
   top_n(10) %>%
   ggplot(aes(x = n, y = fct_reorder(medical_specialty,n))) + 
    geom_col()
+```
+# Question 2
+```{r}
+mts %>% 
+  unnest_tokens(word, transcription) %>%
+  count(word, sort = TRUE) %>%
+  top_n(20, n) %>%
+  ggplot(aes(n, fct_reorder(word, n))) +
+  geom_col()
+```
+There are a lot of stopwords that need to be filtered
+
+# Question 3
+```{r}
+mts %>% 
+  unnest_tokens(word, transcription) %>%
+  anti_join(stop_words, by = c("word")) %>%
+  count(word, sort = TRUE) %>%
+  top_n(20, n) %>%
+  ggplot(aes(n, fct_reorder(word, n))) +
+  geom_col()
 ```
