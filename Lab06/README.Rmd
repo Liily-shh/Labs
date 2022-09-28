@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r install-libraries}
-library(tidyverse)
+library(tidytext)
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
@@ -52,14 +52,15 @@ mts %>%
   ggplot(aes(n, fct_reorder(word, n))) +
   geom_col()
 ```
-There are a lot of stopwords that need to be filtered
+####There are a lot of stopwords that need to be filtered
 
 # Question 3
-```{r}
+```{r, cache = TRUE}
 mts %>% 
   unnest_tokens(word, transcription) %>%
-  anti_join(stop_words, by = c("word")) %>%
   count(word, sort = TRUE) %>%
+  anti_join(stop_words, by = c("word")) %>%
+  filter( !grepl(pattern = "^[0-9]+$", x = word)) %>% 
   top_n(20, n) %>%
   ggplot(aes(n, fct_reorder(word, n))) +
   geom_col()

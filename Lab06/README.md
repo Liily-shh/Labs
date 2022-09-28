@@ -8,6 +8,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ``` r
+library(tidytext)
 library(tidyverse)
 ```
 
@@ -128,4 +129,31 @@ specialties %>%
 
     ## Selecting by n
 
-![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- --> \# Question 2
+
+``` r
+mts %>% 
+  unnest_tokens(word, transcription) %>%
+  count(word, sort = TRUE) %>%
+  top_n(20, n) %>%
+  ggplot(aes(n, fct_reorder(word, n))) +
+  geom_col()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- --> \####There
+are a lot of stopwords that need to be filtered
+
+# Question 3
+
+``` r
+mts %>% 
+  unnest_tokens(word, transcription) %>%
+  count(word, sort = TRUE) %>%
+  anti_join(stop_words, by = c("word")) %>%
+  filter( !grepl(pattern = "^[0-9]+$", x = word)) %>% 
+  top_n(20, n) %>%
+  ggplot(aes(n, fct_reorder(word, n))) +
+  geom_col()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
