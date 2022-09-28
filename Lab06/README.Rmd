@@ -1,0 +1,44 @@
+---
+title: "Lab06"
+author: "Lily"
+date: "`r Sys.Date()`"
+output: github_document
+always_allow_html: true
+---
+  
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r install-libraries}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(forcats)
+```
+
+## Step 1
+```{r read-data, cache=TRUE}
+if (!file.exists("mtsamples.csv")) {
+  download.file("https://raw.githubusercontent.com/USCbiostats/data-science-data/master/00_mtsamples/mtsamples.csv",  "mtsamples.csv", method="libcurl", timeout = 60)  
+}
+mts <- read.csv("mtsamples.csv")
+str(mts)
+mts <- as_tibble(mts)
+mts
+```
+# Question 1 
+```{r}
+specialties <- 
+    mts %>%
+    count(medical_specialty)
+specialties %>%
+    arrange(desc(n)) %>%
+knitr::kable()
+```
+```{r}
+specialties %>%
+  top_n(10) %>%
+  ggplot(aes(x = n, y = fct_reorder(medical_specialty,n))) + 
+   geom_col()
+```
