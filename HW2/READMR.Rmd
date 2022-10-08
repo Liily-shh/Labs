@@ -59,8 +59,43 @@ mean(is.na(CHS$bmi))
 
 ```{r}
 summary(CHS)
-mean(is.na(CHS$fev))
+FEVMEAN <- mean(is.na(CHS$fev))
 ```
 ### Mean BMI of 0.07916667
 
-
+```{r}
+CHS[, bmi := fcoalesce(bmi, mean(bmi, na.rm = TRUE)),
+    by = .(male,hispanic)]
+CHS[, fev:= fcoalesce(fev, mean(fev, na.rm = TRUE)),
+    by = .(male,hispanic)]
+min(CHS$bmi)
+max(CHS$bmi)
+table(CHS$obesity)
+CHS
+```
+```{r Smoke}
+CHS<-CHS[,smoke_gas_exposure :=fifelse(smoke==1 & gasstove==1,"SG",
+                  fifelse(smoke==0  & gasstove ==0,"NN",
+                  fifelse(smoke==1  & gasstove ==0,"SN","NG" )))
+        ]
+table(CHS$smoke_gas_exposure)
+CHS
+```
+```{r tables}
+town <- CHS %>% group_by(townname) %>% summarise(FEVMEAN = mean(fev), sd_fev = sd(fev), freq_asthma = sum(asthma)/ n()) %>% distinct(townname, .keep_all = TRUE) 
+town <- ggplot(CHS[!is.na(CHS$townname)], aes(x=townname, y=fev, color=townname)) +
+  geom_boxplot()
+town
+sex <- CHS %>% group_by(male) %>% summarise(FEVMEAN = mean(fev), sd_fev = sd(fev), freq_asthma = sum(asthma)/ n()) %>% distinct(male, .keep_all = TRUE) 
+sex <- ggplot(CHS[!is.na(CHS$male)], aes(x=male, y=fev, color=male)) +
+  geom_boxplot()
+sex
+obesity <- CHS %>% group_by(bmi) %>% summarise(FEVMEAN = mean(fev), sd_fev = sd(fev), freq_asthma = sum(asthma)/ n()) %>% distinct(bmi, .keep_all = TRUE) 
+obesity <- ggplot(CHS[!is.na(CHS$bmi)], aes(x=bmi, y=fev, color=bmi)) +
+  geom_boxplot()
+obesity
+smokegas <- CHS %>% group_by(smoke_gas_exposure) %>% summarise(mean_fev = mean(fev), sd_fev = sd(fev), freq_asthma = sum(asthma)/ n()) %>% distinct(smoke_gas_exposure, .keep_all = TRUE) 
+smokegas <- ggplot(CHS[!is.na(CHS$smoke_gas_exposure)], aes(x=smoke_gas_exposure, y=fev, color=smoke_gas_exposure)) +
+  geom_boxplot()
+smokegas
+```
