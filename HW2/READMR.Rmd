@@ -1,0 +1,66 @@
+---
+title: "HW 2"
+author: "Lily"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r install-libraries}
+library(tidytext)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(forcats)
+library(stringr)
+library(rvest)
+library(skimr)
+library(data.table)
+library(readr)
+```
+
+```{r read-data, cache=TRUE}
+if (!file.exists("chs_individual.csv"))
+  download.file(
+    url = "https://raw.githubusercontent.com/USCbiostats/data-science-data/master/01_chs/chs_individual.csv",
+    destfile = "chs_individual.csv",
+    method   = "libcurl",
+    timeout  = 60
+    )
+if (!file.exists("chs_regional.csv"))
+  download.file(
+    url = "https://raw.githubusercontent.com/USCbiostats/data-science-data/master/01_chs/chs_regional.csv",
+    destfile = "chs_regional.csv",
+    method   = "libcurl",
+    timeout  = 60
+    )
+CHSI <- data.table::fread("chs_individual.csv")
+CHSR <- data.table::fread("chs_regional.csv")
+```
+
+```{r merge-data}
+CHS <- merge(CHSI, CHSR, by= "townname")
+CHS <- data.table(CHS)
+```
+
+```{r Clean-data}
+nrow(CHSI) == nrow(CHS)
+```
+### Data does not show signs of double inputs 
+
+```{r}
+summary(CHS)
+mean(is.na(CHS$bmi))
+```
+### Mean BMI of 0.07416667
+
+```{r}
+summary(CHS)
+mean(is.na(CHS$fev))
+```
+### Mean BMI of 0.07916667
+
+
