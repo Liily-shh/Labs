@@ -1,0 +1,71 @@
+---
+title: "Lab07"
+author: "Lily"
+date: "`r Sys.Date()`"
+output: github_document
+always_allow_html: true
+---
+  
+  ```{r}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r install-libraries}
+library(tidytext)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(forcats)
+library(stringr)
+library(rvest)
+```
+```{r read-data, cache=TRUE}
+library(httr)
+query_ids <- GET(
+  url   = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
+  query = list(
+    db      = "pubmed",
+    term    = "covid19 hawaii",
+    retmax  = 1000
+  ), 
+)
+ids <- httr::content(query_ids)
+```
+
+```{r - Question 3}
+ids <- as.character(ids)
+
+ids <- stringr::str_remove_all(ids, "</?Id>")
+head(ids)
+
+publications <- GET(
+  url   = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi",
+  query = list(
+    db  = "pubmed",
+    id  = paste(ids,collapse = ","),
+  retmax = 1000,
+  rettype = "abstract"))
+publications <- httr::content(publications)
+```
+```{r}
+pub_char_list <- xml2::xml_children(publications)
+pub_char_list <- sapply(pub_char_list, as.character)
+abstracts <- str_extract(pub_char_list, "<Abstract>[[:print:][:space:]]+</Abstract>")
+abstracts[[1]]
+abstracts <- str_remove_all(abstracts, "</?[[:alnum:]- =\"]+>") 
+abstracts[[1]]
+abstracts <- str_replace_all(abstracts, "[[:space:]]+"," ")
+abstracts[[1]]
+titles <- str_extract(pub_char_list, "<ArticleTitle>[[:print:][:space:]]+</ArticleTitle>")
+titles[[1]]
+titles <- str_remove_all(titles, "</?[[:alnum:]- =\"]+>")
+titles[[1]]
+```
+```{r - dateset}
+database <- data.frame(
+  PubMedId = ids,
+  Title    = titles,
+  Abstract = abstracts
+)
+knitr::kable(database[1:8,], caption = "Some papers about Covid19 and Hawaii")
+```
