@@ -20,6 +20,7 @@ library(rvest)
 library(skimr)
 library(data.table)
 library(readr)
+library(leaflet)
 ```
 
 ```{r read-data, cache=TRUE}
@@ -99,3 +100,41 @@ smokegas <- ggplot(CHS[!is.na(CHS$smoke_gas_exposure)], aes(x=smoke_gas_exposure
   geom_boxplot()
 smokegas
 ```
+# Part 2
+```{r}
+dim(CHS)
+head(CHS)
+str(CHS)
+tail(CHS)
+```
+```{r}
+CHS[!is.na(townname)] %>%
+  ggplot(mapping = aes(x = bmi, y = fev, color = townname, linetype = townname)) + geom_smooth(method = lm, se = FALSE, color = "red")
+```
+### From this gragh one can determine that BMI and FEV are POSITIVELY correlated 
+
+```{r}
+ggplot(CHS, aes(fev, fill = bmi)) +
+  geom_histogram(binwidth = 500)
+```
+```{r}
+ggplot(CHS, aes(fev, fill = smoke_gas_exposure)) +
+  geom_histogram(binwidth = 500) 
+```
+```{r}
+ggplot(data=CHS, aes(x=smoke_gas_exposure, y=bmi)) +
+  geom_bar(stat="identity") 
+```
+```{r leaflet}
+PM25Leaf <- leaflet(CHS)
+PM25Leaf 
+```
+```{r}
+CHSPLOT <- ggplot(data=CHS, aes(x = FEVMEAN, y = pm25_mass)) +
+geom_point() +
+geom_smooth(method = lm, se = FALSE, col = "black")
+CHSPLOT
+```
+### I used a gplot to show the overpattern for the response group. 
+
+
