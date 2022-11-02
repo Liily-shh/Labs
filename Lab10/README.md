@@ -900,12 +900,14 @@ dbGetQuery(con, "
 SELECT c.customer_id, c.last_name, p.payment_id, p.amount
 FROM customer AS c INNER JOIN payment AS p
   ON c.customer_id = p.customer_id
-WHERE c.last_name == 'Davis'
+WHERE c.last_name == 'DAVIS'
 ")
 ```
 
-    ## [1] customer_id last_name   payment_id  amount     
-    ## <0 rows> (or 0-length row.names)
+    ##   customer_id last_name payment_id amount
+    ## 1           6     DAVIS      16685   4.99
+    ## 2           6     DAVIS      16686   2.99
+    ## 3           6     DAVIS      16687   0.99
 
 # Exercise 6
 
@@ -1076,7 +1078,3 @@ ORDER BY N
     ## 14         197 8       3.99       0.99   2.615000      20.92
 
 # Cleanup
-
-``` r
-dbDisconnect(con)
-```
