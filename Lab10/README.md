@@ -879,26 +879,133 @@ ORDER BY amount
 # Exercise 5
 
 ``` r
+dbGetQuery(con, "PRAGMA table_info(customer)"
+)
+```
+
+    ##    cid        name    type notnull dflt_value pk
+    ## 1    0 customer_id INTEGER       0         NA  0
+    ## 2    1    store_id INTEGER       0         NA  0
+    ## 3    2  first_name    TEXT       0         NA  0
+    ## 4    3   last_name    TEXT       0         NA  0
+    ## 5    4       email    TEXT       0         NA  0
+    ## 6    5  address_id INTEGER       0         NA  0
+    ## 7    6  activebool    TEXT       0         NA  0
+    ## 8    7 create_date    TEXT       0         NA  0
+    ## 9    8 last_update    TEXT       0         NA  0
+    ## 10   9      active INTEGER       0         NA  0
+
+``` r
 dbGetQuery(con, "
-SELECT payment_id, last_name, amount
-FROM payment
-  INNER JOIN actor
-WHERE last_name IN ('Davis')
+SELECT c.customer_id, c.last_name, p.payment_id, p.amount
+FROM customer AS c INNER JOIN payment AS p
+  ON c.customer_id = p.customer_id
+WHERE c.last_name == 'Davis'
 ")
 ```
 
-    ## [1] payment_id last_name  amount    
+    ## [1] customer_id last_name   payment_id  amount     
     ## <0 rows> (or 0-length row.names)
 
 # Exercise 6
 
 ### Exercise 6.1
 
+``` r
+dbGetQuery(con, "
+SELECT 
+  COUNT(*) AS count
+FROM rental
+")
+```
+
+    ##   count
+    ## 1 16044
+
 ### Exercise 6.2
+
+``` r
+dbGetQuery(con, "
+SELECT customer_id, COUNT(*) AS count
+FROM rental
+GROUP BY customer_id
+LIMIT 8
+")
+```
+
+    ##   customer_id count
+    ## 1           1    32
+    ## 2           2    27
+    ## 3           3    26
+    ## 4           4    22
+    ## 5           5    38
+    ## 6           6    28
+    ## 7           7    33
+    ## 8           8    24
 
 ### Exercise 6.3
 
+``` r
+dbGetQuery(con, "
+SELECT customer_id, COUNT(*) AS count
+FROM rental
+GROUP BY customer_id
+ORDER BY customer_id DESC
+LIMIT 8
+")
+```
+
+    ##   customer_id count
+    ## 1         599    19
+    ## 2         598    22
+    ## 3         597    25
+    ## 4         596    28
+    ## 5         595    30
+    ## 6         594    27
+    ## 7         593    26
+    ## 8         592    29
+
+``` r
+dbGetQuery(con, "
+SELECT customer_id, COUNT(*) AS count
+FROM rental
+GROUP BY customer_id
+ORDER BY customer_id ASC
+LIMIT 8
+")
+```
+
+    ##   customer_id count
+    ## 1           1    32
+    ## 2           2    27
+    ## 3           3    26
+    ## 4           4    22
+    ## 5           5    38
+    ## 6           6    28
+    ## 7           7    33
+    ## 8           8    24
+
 ### Exercise 6.4
+
+``` r
+dbGetQuery(con, "
+SELECT customer_id, COUNT(*) AS count
+FROM rental
+GROUP BY customer_id
+HAVING count > 39
+ORDER BY customer_id ASC
+LIMIT 8
+")
+```
+
+    ##   customer_id count
+    ## 1          75    41
+    ## 2         144    42
+    ## 3         148    46
+    ## 4         197    40
+    ## 5         236    42
+    ## 6         469    40
+    ## 7         526    45
 
 # Exercise 7
 
