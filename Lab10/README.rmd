@@ -187,19 +187,47 @@ SELECT customer_id, COUNT(*) AS count
 FROM rental
 GROUP BY customer_id
 HAVING count > 39
-ORDER BY customer_id ASC
 LIMIT 8
 ")
 ```
 # Exercise 7
 ```{r}
+dbGetQuery(con, "
+SELECT MAX(amount) AS maxpayment, 
+       MIN(amount) AS minpayment,
+       AVG(amount) AS avgpayment,
+       SUM(amount) AS sumpayment
+FROM payment
+")
 ```
 ### Exercise 7.1
 ```{r}
+dbGetQuery(con, "
+SELECT customer_id, 
+       MAX(amount) AS maxpayment, 
+       MIN(amount) AS minpayment,
+       AVG(amount) AS avgpayment,
+       SUM(amount) AS sumpayment
+FROM payment
+GROUP BY customer_id
+LIMIT 5
+")
 ```
 ### Exercise 7.2
 ```{r}
+dbGetQuery(con, "
+SELECT customer_id, COUNT(*) AS N, 
+       MAX(amount) AS maxpayment, 
+       MIN(amount) AS minpayment,
+       AVG(amount) AS avgpayment,
+       SUM(amount) AS sumpayment
+FROM payment
+GROUP BY customer_id
+HAVING N > 5
+ORDER BY N
+")
 ```
 # Cleanup
 ```{r}
+dbDisconnect(con)
 ```
