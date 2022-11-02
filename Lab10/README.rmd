@@ -2,23 +2,26 @@
 title: "Lab 10"
 author: "Lily Shkhyan"
 date: "`r Sys.Date()`"
-output: 
-  html_document: default
-  github_document: 
-      html_preview: false 
+output: github_document
 always_allow_html: true
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+options(repos = c(CRAN = "http://cran.rstudio.com"))
 ```
 
-## Data Set up
-```{r}
-# install.packages(c("RSQLite", "DBI"))
+```{r instal packages}
+
+if(!require(RSQLite)) install.packages(c("RSQLite"))
+if(!require(DBI)) install.packages(c("DBI"))
 
 library(RSQLite)
 library(DBI)
+```
+
+## Data Setup
+```{r}
 
 # Initialize a temporary in memory database
 con <- dbConnect(SQLite(), ":memory:")
@@ -56,6 +59,7 @@ dbGetQuery(con, "
 SELECT actor_id, first_name, last_name
 FROM actor
 ORDER BY last_name, first_name
+LIMIT 15
 ")
 ```
 Try in SQL 
@@ -64,6 +68,21 @@ SELECT actor_id, first_name, last_name
 FROM actor
 ORDER BY last_name, first_name
 ```
+# Exercise 2
 ```{r}
-dbDisconnect(con)
+dbGetQuery(con, "
+SELECT actor_id, first_name, last_name
+FROM actor
+WHERE last_name IN ('WILLIAMS', 'DAVIS')
+ORDER BY last_name
+")
 ```
+
+```{r}
+dbGetQuery(con, "
+SELECT actor_id, first_name, last_name
+FROM actor
+WHERE last_name IN ('WILLIAMS', 'DAVIS')
+")
+```
+
