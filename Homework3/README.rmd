@@ -1,0 +1,171 @@
+---
+title: "Homework 3"
+author: "Lily"
+date: "`r Sys.Date()`"
+output: github_document
+always_allow_html: true
+---
+  
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r install-libraries}
+library(tidytext)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(forcats)
+library(stringr)
+library(rvest)
+```
+
+
+# Question 1: How many papers were you able to find?
+```{r}
+website <- xml2::read_html("https://pubmed.ncbi.nlm.nih.gov/?term=Sars-cov-2+trial+vaccine")
+counts <- xml2::xml_find_first(website, "/html/body/main/div[9]/div[2]/div[2]/div[1]/div[1]")
+counts <- as.character(counts)
+stringr::str_extract(counts, "[0-9,]+")
+```
+
+# Question 2: Download each papers’ details using the query parameter rettype = abstract.
+
+```{r}
+library(httr)
+query_ids <- GET(
+  url   = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
+  query = list(
+    db      = "pubmed",
+    term    = "sars-cov-2 trial vaccine",
+    retmax  = 250
+  ), 
+)
+ids <- httr::content(query_ids)
+```
+# Question 3
+```{r}
+ids <- as.character(ids)
+ids <- stringr::str_extract_all(ids, "<Id>[[:digit:]]+</Id>")[[1]]
+ids <- stringr::str_remove_all(ids, "</?Id>")
+head(ids)
+publications <- GET(
+  url   = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi",
+  query = list(
+    db  = "pubmed",
+    id  = paste(ids,collapse = ","),
+  retmax = 250,
+  rettype = "abstract"
+    )
+)
+publications <- httr::content(publications)
+```
+### Part 1: Pubmed ID number
+```{r}
+pub_char_list <- xml2::xml_children(publications)
+pub_char_list <- sapply(pub_char_list, as.character)
+```
+### Part 2: Title of the paper
+```{r}
+titles <- str_extract(pub_char_list, "<ArticleTitle>[[:print:][:space:]]+</ArticleTitle>")
+titles[[1]]
+titles <- str_remove_all(titles, "</?[[:alnum:]- =\"]+>")
+titles[[1]]
+```
+### Part 3: Name of the journal where it was published 
+```{r}
+JName <- str_extract(pub_char_list, "<Title>[[:print:][:space:]]+</Title>")
+JName[[1]]
+JName <- str_remove_all(JName, "</?[[:alnum:]- =\"]+>") 
+JName[[1]]
+JName <- str_replace_all(JName, "[[:space:]]+"," ")
+JName[[1]]
+```
+### Part 4: Publication date 
+```{r}
+PDate <- str_extract(pub_char_list, "<PDate>[[:print:][:space:]]+</PDate>")
+PDate[[1]]
+PDate <- str_remove_all(PDate, "</?[[:alnum:]- =\"]+>") 
+PDate[[1]]
+PDate <- str_replace_all(PDate, "[[:space:]]+"," ")
+PDate[[1]]
+```
+### Part 4:Abstract of the paper (if any)
+```{r}
+abstracts <- str_extract(pub_char_list, "<Abstract>[[:print:][:space:]]+</Abstract>")
+abstracts[[1]]
+abstracts <- str_remove_all(abstracts, "</?[[:alnum:]- =\"]+>") 
+abstracts[[1]]
+abstracts <- str_replace_all(abstracts, "[[:space:]]+"," ")
+abstracts[[1]]
+```
+### Dataset
+```{r}
+database <- data.frame(
+  PubMedId = ids,
+  Title    = titles,
+  PDate=PDate,
+  Abstract = abstracts,
+  journal=JName
+)
+knitr::kable(head(database[,1:5]), caption = "Sars-cov-2 trial vaccine")
+```
+# Text Mining 
+# Question 1
+```{r}
+if (!file.exists("pubmed.csv")) {
+  download.file("https://raw.githubusercontent.com/USCbiostats/data-science-data/master/03_pubmed/pubmed.csv", 
+                "pubmed.csv", method="libcurl", timeout = 60)
+}
+pubmed <- read.csv("pubmed.csv")
+str(pubmed)
+pubmed <- as_tibble(pubmed)
+str(pubmed)
+```
+```{r}
+pubmed %>%
+  unnest_tokens(word, abstract) %>%
+  count(word, sort = TRUE) %>%
+  top_n(20, n) %>%
+  ggplot(aes(n, fct_reorder(word, n))) +
+  geom_col()
+```
+```{r}
+s1 <-pubmed %>%
+  unnest_tokens(word, abstract) %>%
+  group_by(term) %>%
+  count(word, sort = TRUE) %>%
+  anti_join(stop_words, by = c("word")) %>%
+  # use regular expression to filter out numbers
+  filter( !grepl(pattern = "^[0-9]+$", x = word)) %>%
+  top_n(5, n) 
+  
+```
+```{r}
+s1 %>%
+  group_by(term) %>%
+  slice_max(order_by = n,n=5)
+  
+```
+# Question 2
+```{r}
+pubmed %>%
+  unnest_ngrams(bigram, abstract, n=2) %>%
+  count(bigram, sort = TRUE) %>%
+  top_n(10, n) %>%
+  ggplot(aes(n, fct_reorder(bigram, n))) +
+  geom_col()
+```
+# Question 3
+```{r}
+pubmed %>%
+  unnest_tokens(word, abstract) %>%
+  group_by(term)%>%
+  count(word, term) %>%
+  bind_tf_idf(word, term, n)%>%
+  arrange(desc(tf_idf)) %>%
+  slice_max(order_by = tf_idf,n=5)
+```
+
+
+
