@@ -8,6 +8,8 @@ editor_options:
 always_allow_html: true
 ---
 
+**HTML Report:** [**Click Here**](https://rawcdn.githack.com/Liily-shh/Labs/bdd877242b46042d484bc166e37774fb94892a08/Lab11/README.html) 
+
 
 **And remember to set `eval=TRUE`**
 
